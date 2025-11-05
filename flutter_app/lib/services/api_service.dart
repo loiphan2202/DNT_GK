@@ -1,6 +1,3 @@
-// ========================
-// API SERVICE
-// ========================
 
 import 'dart:convert';
 import 'dart:io';
@@ -13,13 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class ApiService {
-  // ⚠️ THAY ĐỔI IP NÀY THEO MÁY CỦA BẠN
-  // Nếu chạy trên thiết bị thật: dùng IP máy tính (ví dụ: 192.168.1.100)
-  // Nếu chạy trên Android Emulator: dùng 10.0.2.2
-  // Nếu chạy trên iOS Simulator: dùng localhost
   static const String baseUrl = 'http://localhost:3000/api';
 
-  // Helper method để xử lý file upload
   static Future<void> _addFileToRequest(
     http.MultipartRequest request,
     String fieldName,
@@ -31,7 +23,6 @@ class ApiService {
       final bytes = await file.readAsBytes();
       final filename = file.name ?? 'image.jpg';
 
-      // Xác định mime type dựa trên phần mở rộng
       String mimeType = 'image/jpeg';
       final ext = filename.toLowerCase();
       if (ext.endsWith('.png'))
@@ -56,25 +47,25 @@ class ApiService {
     }
   }
 
-  // Lưu token vào SharedPreferences
+  // Lưu token
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
   }
 
-  // Lấy token từ SharedPreferences
+  // Lấy token
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
   }
 
-  // Xóa token (logout)
+  // Xóa token
   static Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
   }
 
-  // Get headers with token
+  // Lấy headers với token
   static Future<Map<String, String>> _getHeaders() async {
     final token = await getToken();
     return {
@@ -83,9 +74,7 @@ class ApiService {
     };
   }
 
-  // ========================
-  // 1. ĐĂNG KÝ
-  // ========================
+
   static Future<Map<String, dynamic>> register({
     required String username,
     required String email,
@@ -96,12 +85,12 @@ class ApiService {
       var request =
           http.MultipartRequest('POST', Uri.parse('$baseUrl/register'));
 
-      // Thêm các trường text
+
       request.fields['username'] = username;
       request.fields['email'] = email;
       request.fields['password'] = password;
 
-      // Thêm ảnh nếu có
+
       if (imageFile != null) {
         await _addFileToRequest(request, 'image', imageFile);
       }
@@ -123,9 +112,7 @@ class ApiService {
     }
   }
 
-  // ========================
-  // 2. ĐĂNG NHẬP
-  // ========================
+
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -154,9 +141,7 @@ class ApiService {
     }
   }
 
-  // ========================
-  // 3. LẤY DANH SÁCH USER
-  // ========================
+
   static Future<Map<String, dynamic>> getUsers({
     int page = 1,
     int limit = 10,
@@ -194,9 +179,7 @@ class ApiService {
     }
   }
 
-  // ========================
-  // 4. LẤY CHI TIẾT USER
-  // ========================
+
   static Future<Map<String, dynamic>> getUserById(String id) async {
     try {
       final headers = await _getHeaders();
@@ -220,9 +203,7 @@ class ApiService {
     }
   }
 
-  // ========================
-  // 5. CẬP NHẬT USER
-  // ========================
+
   static Future<Map<String, dynamic>> updateUser({
     required String id,
     String? username,
@@ -255,7 +236,7 @@ class ApiService {
         final responseData = await response.stream.bytesToString();
         final data = json.decode(responseData);
 
-        print('Server response: $data'); // Thêm log để debug
+        print('Server response: $data');
 
         if (response.statusCode == 200) {
           return {'success': true, 'data': data};
@@ -266,18 +247,16 @@ class ApiService {
           };
         }
       } catch (e) {
-        print('Error during request: $e'); // Thêm log để debug
+        print('Error during request: $e');
         return {'success': false, 'message': 'Network error: ${e.toString()}'};
       }
     } catch (e) {
-      print('Error in updateUser: $e'); // Thêm log để debug
+      print('Error in updateUser: $e');
       return {'success': false, 'message': 'Error: $e'};
     }
   }
 
-  // ========================
-  // 6. XÓA USER
-  // ========================
+
   static Future<Map<String, dynamic>> deleteUser(String id) async {
     try {
       final headers = await _getHeaders();
@@ -301,14 +280,12 @@ class ApiService {
     }
   }
 
-  // ========================
-  // 7. GET IMAGE URL
-  // ========================
+
   static String getImageUrl(String imagePath) {
     if (imagePath.isEmpty) return '';
-    // Nếu imagePath đã là URL đầy đủ thì return luôn
+
     if (imagePath.startsWith('http')) return imagePath;
-    // Nếu không thì ghép với baseUrl
+
     final urlBase = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
     return urlBase + imagePath;
   }

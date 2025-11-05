@@ -11,9 +11,7 @@ import 'screens/login_screen.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Cấu hình cho ứng dụng web
   if (kIsWeb) {
-    // Tắt một số tính năng mặc định của trình duyệt
     SystemChannels.textInput.invokeMethod('TextInput.clearClient');
   }
 

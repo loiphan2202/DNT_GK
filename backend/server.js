@@ -1,6 +1,3 @@
-// ========================
-// SERVER.JS - BACKEND API
-// ========================
 
 require('dotenv').config();
 const express = require('express');
@@ -15,21 +12,19 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ========================
-// MIDDLEWARE
-// ========================
+
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads')); // Serve static files
+app.use('/uploads', express.static('uploads'));
 
-// Tạo thư mục uploads nếu chưa có
+
 if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
-// ========================
+ 
 // MONGODB CONNECTION
-// ========================
+ 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -37,9 +32,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ MongoDB connected successfully'))
 .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// ========================
+ 
 // USER SCHEMA & MODEL
-// ========================
+ 
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -66,9 +61,9 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// ========================
+ 
 // MULTER CONFIG (Upload File)
-// ========================
+ 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
@@ -106,9 +101,9 @@ const upload = multer({
   },
 });
 
-// ========================
+ 
 // MIDDLEWARE: AUTH
-// ========================
+ 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -126,9 +121,9 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// ========================
+ 
 // ROUTES
-// ========================
+ 
 
 // 1. ĐĂNG KÝ (Register)
 app.post('/api/register', upload.single('image'), async (req, res) => {
@@ -379,17 +374,17 @@ app.post('/api/upload', authenticateToken, upload.single('image'), (req, res) =>
   }
 });
 
-// ========================
+ 
 // ERROR HANDLING
-// ========================
+ 
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
-// ========================
+ 
 // START SERVER
-// ========================
+ 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

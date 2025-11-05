@@ -1,8 +1,3 @@
-// ========================
-// USER MODEL
-// CHỈ CÓ 4 TRƯỜNG: username, email, password, image
-// ========================
-
 class User {
   final String id;
   final String username;
@@ -16,7 +11,7 @@ class User {
     required this.image,
   });
 
-  // Chuyển từ JSON sang User object
+  // JSON->User object
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['_id'] ?? json['id'] ?? '',
@@ -26,7 +21,7 @@ class User {
     );
   }
 
-  // Chuyển từ User object sang JSON
+  // User object->JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -36,7 +31,7 @@ class User {
     };
   }
 
-  // Copy với các giá trị mới
+
   User copyWith({
     String? id,
     String? username,

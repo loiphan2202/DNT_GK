@@ -22,12 +22,10 @@ class ImageHelper {
 
       if (pickedFile == null) return null;
 
-      // For web, return the XFile directly
       if (kIsWeb) {
         return pickedFile;
       }
 
-      // For mobile platforms, return File object
       return File(pickedFile.path);
     } catch (e) {
       print('Error picking image: $e');
@@ -42,15 +40,13 @@ class ImageHelper {
 
     if (imageFile != null) {
       if (kIsWeb) {
-        // For web, use NetworkImage from XFile
         return NetworkImage(imageFile.path);
       } else {
-        // For mobile, use FileImage
+
         return FileImage(imageFile as File);
       }
     }
 
-    // Use NetworkImage for existing images
     return NetworkImage(networkUrl!);
   }
 }

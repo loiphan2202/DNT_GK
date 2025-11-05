@@ -2,11 +2,12 @@
 // REGISTER SCREEN
 // ========================
 
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../services/api_service.dart';
+import '../utils/image_helper.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -21,8 +22,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
-  File? _imageFile;
+
+  dynamic _imageFile;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -37,17 +38,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
+    final pickedImage = await ImageHelper.pickImage(
       source: ImageSource.gallery,
       maxWidth: 800,
       maxHeight: 800,
       imageQuality: 85,
     );
 
-    if (pickedFile != null) {
+    if (pickedImage != null) {
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = pickedImage;
       });
     }
   }
@@ -110,9 +110,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey.shade300,
-                  backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                  backgroundImage:
+                      ImageHelper.getImageProvider(_imageFile, null),
                   child: _imageFile == null
-                      ? Icon(Icons.add_a_photo, size: 40, color: Colors.grey.shade600)
+                      ? Icon(Icons.add_a_photo,
+                          size: 40, color: Colors.grey.shade600)
                       : null,
                 ),
               ),
@@ -177,7 +179,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {

@@ -62,13 +62,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user',
-  },
-}, {
-  timestamps: true, // Tự động thêm createdAt và updatedAt
 });
 
 const User = mongoose.model('User', userSchema);
@@ -90,14 +83,25 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    console.log('File upload request:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype
+    });
+
+    // Kiểm tra mimetype thay vì extension
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/gif',
+      'application/octet-stream' // Cho phép binary data từ web
+    ];
     
-    if (mimetype && extname) {
+    if (allowedMimeTypes.includes(file.mimetype)) {
       return cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed!'));
+      console.log('Invalid file type:', file.mimetype);
+      return cb(new Error(`Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`));
     }
   },
 });
@@ -269,8 +273,25 @@ app.get('/api/users/:id', authenticateToken, async (req, res) => {
 });
 
 // 5. CẬP NHẬT USER (Update User)
-app.put('/api/users/:id', authenticateToken, upload.single('image'), async (req, res) => {
-  try {
+app.put('/api/users/:id', authenticateToken, (req, res) => {
+  upload.single('image')(req, res, async (err) => {
+    try {
+      if (err instanceof multer.MulterError) {
+        // Lỗi từ multer
+        console.error('Multer error:', err);
+        return res.status(400).json({ message: err.message });
+      } else if (err) {
+        // Lỗi khác
+        console.error('Upload error:', err);
+        return res.status(400).json({ message: err.message });
+      }
+
+      console.log('Update user request:', {
+        body: req.body,
+        file: req.file,
+        userId: req.params.id
+      });
+
     const { username, email, password } = req.body;
     const userId = req.params.id;
 
@@ -305,10 +326,17 @@ app.put('/api/users/:id', authenticateToken, upload.single('image'), async (req,
         image: user.image,
       },
     });
-  } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
+    } catch (error) {
+      console.error('Update user error:', {
+        message: error.message,
+        stack: error.stack,
+        userId: req.params.id,
+        body: req.body,
+        file: req.file
+      });
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  });
 });
 
 // 6. XÓA USER (Delete User)

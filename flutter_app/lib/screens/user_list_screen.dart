@@ -4,10 +4,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
 import '../models/user_model.dart';
 import '../services/api_service.dart';
-import 'user_form_screen.dart';
 import 'login_screen.dart';
+import 'user_form_screen.dart';
 
 class UserListScreen extends StatefulWidget {
   const UserListScreen({Key? key}) : super(key: key);
@@ -191,8 +192,7 @@ class _UserListScreenState extends State<UserListScreen> {
                                   backgroundColor: Colors.blue.shade100,
                                   backgroundImage: user.image.isNotEmpty
                                       ? NetworkImage(
-                                          ApiService.getImageUrl(user.image),
-                                        )
+                                          ApiService.getImageUrl(user.image))
                                       : null,
                                   child: user.image.isEmpty
                                       ? Text(

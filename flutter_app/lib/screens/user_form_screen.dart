@@ -2,12 +2,15 @@
 // USER FORM SCREEN (Add/Edit)
 // ========================
 
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
+
 import '../models/user_model.dart';
 import '../services/api_service.dart';
+import '../utils/image_helper.dart';
 
 class UserFormScreen extends StatefulWidget {
   final User? user; // null = thêm mới, có giá trị = chỉnh sửa
@@ -24,7 +27,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  File? _newImageFile;
+  dynamic _newImageFile;
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -34,6 +37,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
     if (widget.user != null) {
       _usernameController.text = widget.user!.username;
       _emailController.text = widget.user!.email;
+    }
+
+    // Thêm xử lý đặc biệt cho web platform
+    if (kIsWeb) {
+      // Reset text input state khi component được khởi tạo
+      SystemChannels.textInput.invokeMethod('TextInput.clearClient');
     }
   }
 
@@ -48,22 +57,25 @@ class _UserFormScreenState extends State<UserFormScreen> {
   bool get isEditing => widget.user != null;
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
+    final pickedImage = await ImageHelper.pickImage(
       source: ImageSource.gallery,
       maxWidth: 800,
       maxHeight: 800,
       imageQuality: 85,
     );
 
-    if (pickedFile != null) {
+    if (pickedImage != null) {
       setState(() {
-        _newImageFile = File(pickedFile.path);
+        _newImageFile = pickedImage;
       });
     }
   }
 
   Future<void> _saveUser() async {
+    // Unfocus text fields first to avoid text input issues on web
+    FocusScope.of(context).unfocus();
+    await Future.delayed(const Duration(milliseconds: 100));
+
     if (!_formKey.currentState!.validate()) return;
 
     // Nếu thêm mới, password bắt buộc
@@ -81,13 +93,25 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     if (isEditing) {
       // Chỉnh sửa user
+      final username = _usernameController.text.trim();
+      final email = _emailController.text.trim();
+      final password =
+          _passwordController.text.isNotEmpty ? _passwordController.text : null;
+
+      // Đảm bảo các giá trị hợp lệ trước khi gửi
+      if (username.isEmpty || email.isEmpty) {
+        Fluttertoast.showToast(
+          msg: "Vui lòng điền đầy đủ thông tin!",
+          backgroundColor: Colors.red,
+        );
+        return;
+      }
+
       result = await ApiService.updateUser(
         id: widget.user!.id,
-        username: _usernameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text.isNotEmpty
-            ? _passwordController.text
-            : null,
+        username: username,
+        email: email,
+        password: password,
         imageFile: _newImageFile,
       );
     } else {
@@ -138,13 +162,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 child: CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey.shade300,
-                  backgroundImage: _newImageFile != null
-                      ? FileImage(_newImageFile!)
-                      : (isEditing && widget.user!.image.isNotEmpty
-                          ? NetworkImage(
-                              ApiService.getImageUrl(widget.user!.image),
-                            )
-                          : null) as ImageProvider?,
+                  backgroundImage: ImageHelper.getImageProvider(
+                    _newImageFile,
+                    isEditing
+                        ? ApiService.getImageUrl(widget.user!.image)
+                        : null,
+                  ),
                   child: _newImageFile == null &&
                           (!isEditing || widget.user!.image.isEmpty)
                       ? Icon(
@@ -236,9 +259,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   if (!isEditing && (value == null || value.isEmpty)) {
                     return 'Vui lòng nhập mật khẩu';
                   }
-                  if (value != null &&
-                      value.isNotEmpty &&
-                      value.length < 6) {
+                  if (value != null && value.isNotEmpty && value.length < 6) {
                     return 'Mật khẩu phải có ít nhất 6 ký tự';
                   }
                   return null;

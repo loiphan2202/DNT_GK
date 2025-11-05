@@ -1,0 +1,42 @@
+# =========================
+# Flutter
+# =========================
+**/build/
+**/.dart_tool/
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.idea/
+**/pubspec.lock
+
+# iOS
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+
+# Android
+**/android/.gradle/
+**/android/app/build/
+**/android/local.properties
+**/android/key.properties
+
+# Web
+**/flutter_app/build/web/
+
+# =========================
+# Node.js
+# =========================
+**/node_modules/
+**/uploads/
+.env
+npm-debug.log
+yarn-error.log
+
+# =========================
+# VSCode
+# =========================
+.vscode/
+.DS_Store
